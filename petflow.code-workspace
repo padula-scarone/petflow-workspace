@@ -1,0 +1,16 @@
+{
+  "folders": [
+    {
+      "path": "."
+    },
+    {
+      "path": "../petflow-frontend"
+    },
+    {
+      "path": "../petflow-backend"
+    }
+  ],
+  "settings": {
+    "editor.formatOnSave": true
+  }
+}
