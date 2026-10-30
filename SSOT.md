@@ -259,14 +259,14 @@ Espero tu Plan y Tareas para revisarlos. Solo cuando yo te dé el "OK" pasaremos
 
 | Módulo | Acción | Sub-acciones (Checklist Técnico) |
 | :--- | :--- | :--- |
-| **Seguridad** | Iniciar/cerrar sesión | • Validar credenciales (bcrypt/JWT).<br>• Inyectar rol y usuario en contexto global.<br>• Restringir rutas (React Router).<br>• Destruir sesión (Logout). |
+| **Seguridad** | Iniciar/cerrar sesión | |
 | **Ventas** | Alta Venta | • Seleccionar canal y entrega.<br>• Buscar/añadir/modificar/borrar productos del carrito.<br>• Validar stock en memoria.<br>• Seleccionar modalidad (Inmediato vs. Fiado).<br>• Aplicar descuentos manuales o automáticos.<br>• Confirmar y ejecutar transacción en BD.<br>• Visualizar y enviar ticket (Deep Linking). |
-| **Ventas** | Modificación Venta | • Validar límite temporal (15 min) en Servidor.<br>• Anular lógicamente transacción original.<br>• Reposición atómica de stock (y revertir caja solo si la venta era Inmediata).<br>• Repoblar formulario inicial con datos originales. |
-| **Ventas** | Baja Venta | • Validar límite temporal (15 min).<br>• Confirmación por modal (UI).<br>• Baja lógica de registro.<br>• Reposición atómica de stock (y revertir caja solo si la venta era Inmediata). |
-| **Ventas** | Consultar Historial | • Cargar grilla (SSR paginado).<br>• Aplicar filtros (fecha, producto, estado). |
-| **Ventas** | Liquidar Fiado (Cobro) | • Seleccionar fiado en estado `PENDIENTE_PAGO`.<br>• Seleccionar medio de pago actual.<br>• Registrar ingreso en Caja activa, pasar a `COMPLETADA` y emitir comprobante. |
-| **Ventas** | Consultar Venta | • Mostrar vista de detalle del comprobante/transacción. |
-| **Ventas** | Alta Cambio | • Buscador para vinculación de ticket original.<br>• Seleccionar artículo entrante y saliente.<br>• Checkbox "Bolsa abierta" para conversión a granel.<br>• Calcular e ingresar diferencia a favor en caja.<br>• Confirmar transacción. |
-| **Ventas** | Modificación Cambio | • Validar límite temporal (15 min).<br>• Anular cambio original revirtiendo saldo y conversiones granel.<br>• Repoblar vista de cambios. |
-| **Ventas** | Baja Cambio | • Validar límite temporal (15 min).<br>• Baja lógica y reversión atómica de saldos/stock. |
-| **Ventas** | Historial Cambios | • Cargar grilla de cambios con filtros. |
+| **Ventas** | Modificación Venta | |
+| **Ventas** | Baja Venta | |
+| **Ventas** | Consultar Historial | |
+| **Ventas** | Liquidar Fiado (Cobro) | |
+| **Ventas** | Consultar Venta | |
+| **Ventas** | Alta Cambio | |
+| **Ventas** | Modificación Cambio | |
+| **Ventas** | Baja Cambio | |
+| **Ventas** | Historial Cambios | |
