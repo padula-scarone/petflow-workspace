@@ -260,7 +260,7 @@ Espero tu Plan y Tareas para revisarlos. Solo cuando yo te dé el "OK" pasaremos
 | Módulo | Acción | Sub-acciones (Checklist Técnico) |
 | :--- | :--- | :--- |
 | **Seguridad** | Iniciar/cerrar sesión | |
-| **Ventas** | Alta Venta | • Seleccionar canal y entrega.<br>• Buscar/añadir/modificar/borrar productos del carrito.<br>• Validar stock en memoria.<br>• Seleccionar modalidad (Inmediato vs. Fiado).<br>• Aplicar descuentos manuales o automáticos.<br>• Confirmar y ejecutar transacción en BD.<br>• Visualizar y enviar ticket (Deep Linking). |
+| **Ventas** | Alta Venta | • Seleccionar canal (Digital / Presencial).<br>• Seleccionar Entrega (Retiro / Envío).<br>• Buscar producto.<br>• Añadir producto al carrito.<br>• Modificar cantidad del producto.<br>• Borrar producto del carrito.<br>• Seleccionar medios de pago.<br>• Aplicar descuento manual.<br>• Borrar descuento manual.<br>• Confirmar venta.<br>• Cancelar venta.<br>• Visualizar y enviar comprobante (WhatsApp / Mail).<br>• Registrar fiado. |
 | **Ventas** | Modificación Venta | |
 | **Ventas** | Baja Venta | |
 | **Ventas** | Consultar Historial | |
