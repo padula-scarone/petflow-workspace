@@ -42,9 +42,9 @@ Para esta etapa, los módulos satélites se integrarán de forma simulada:
 # 3. Requerimientos Funcionales (RF)
 
 ## Módulo Ventas
-- **RF-VENTAS-01 (Registro y Cálculo):** Soporte dual de cobro. Pago Inmediato (impacta caja, estado `COMPLETADA`) vs. Pago Diferido/Fiado (exige cliente, omite caja, estado `PENDIENTE_PAGO`). Congelamiento de costo unitario vigente por ítem.
+- **RF-VENTAS-01 (Registro y Cálculo):** Soporte dual de cobro. Pago Inmediato (impacta caja, estado `COMPLETADA`) vs. Pago Diferido/Fiado (exige cliente, omite caja, estado `PENDIENTE_PAGO`). Congelamiento de costo unitario vigente por ítem. Al liquidar un fiado en efectivo se registra el monto recibido y el servidor calcula el vuelto; el ingreso a caja es siempre el monto final.
 - **RF-VENTAS-02 (Descuento Stock):** Salida de mercadería en tiempo real hacia inventario al confirmar operación (aplica a cobros y fiados).
-- **RF-VENTAS-03 & 04 (Comprobantes y Envío):** Generación de ticket digital y construcción dinámica de enlaces profundos (Deep Linking) con `wa.me` / `mailto:` y texto precargado. **Toda venta (inmediata o fiado) genera un comprobante de forma instantánea.**
+- **RF-VENTAS-03 & 04 (Comprobantes y Envío):** Generación de ticket digital y construcción dinámica de enlaces profundos (Deep Linking) con `wa.me` / `mailto:` y texto precargado. **Toda venta (inmediata o fiado) genera un comprobante de forma instantánea.** Al liquidar un fiado se conserva el número de comprobante original: el comprobante pasa a ser un recibo de pago.
 - **RF-VENTAS-05 & 06 (Anulación y Edición Venta):** Ventana innegociable de 15 min. La anulación ejecuta baja lógica y revierte impactos de caja/stock correspondientes. La edición ejecuta una anulación y repuebla la vista para recobro.
 - **RF-VENTAS-08 (Cambios - Granel y Saldos):** El ingreso de devoluciones marcadas como "bolsa abierta" se suma estrictamente a la variante "granel" del producto. Diferencias económicas `>= 0` asientan ingresos en caja.
 - **RF-VENTAS-09 & 10 (Anulación y Edición Cambio):** Ventana de 15 min. Reversión atómica de saldos de caja y reposición exacta (unidad o granel) según el formato devuelto originalmente.
@@ -98,10 +98,12 @@ Para esta etapa, los módulos satélites se integrarán de forma simulada:
 2. **Edición Ágil (Regla 15 min):** El servidor valida la ventana temporal. Si aprueba, ejecuta anulación lógica, revierte caja/stock y redirige a CUB 1.1 repoblando el formulario. Si expiran los 15 minutos, el servidor debe devolver Error 403 Forbidden.
  3. **Anulación Definitiva (Regla 15 min):** Ejecuta baja lógica de la venta y revierte impactos atómicamente. Si el ticket era un fiado, solo repone stock. Si expiran los 15 minutos, el servidor debe devolver Error 403 Forbidden.
 4. **Liquidar Fiado (Sin límite de tiempo):** 
-   - Busca ticket en estado `PENDIENTE_PAGO`.
-   - Selecciona medio de pago actual (aplica recargos/descuentos del día).
-   - Inyecta el ingreso en la Caja Diaria abierta del día en curso.
-   - Pasa la transacción a `COMPLETADA` y emite recibo/comprobante de pago.
+   - Busca ticket en estado `PENDIENTE_PAGO`. Si la venta no existe responde 404; si no está en `PENDIENTE_PAGO`, 409.
+   - Selecciona los medios de pago actuales. El servidor calcula el total aplicando los recargos/descuentos del día sobre el importe adeudado (subtotal bruto menos descuento manual); el cobro es total, sin cobros parciales.
+   - En efectivo, el front informa el monto recibido y el servidor calcula y registra el vuelto.
+   - Inyecta el ingreso (monto final, nunca el recibido) en la Caja Diaria abierta del día en curso; si no hay caja abierta, responde 409.
+   - Pasa la transacción a `COMPLETADA`, registra la fecha de pago y emite el recibo de pago conservando el mismo número de comprobante del ticket de deuda.
+   - Un fiado no puede cobrarse dos veces: ante cobros simultáneos, uno falla con 409.
 **Postcondiciones:** Estado de venta actualizado (`ANULADA` o `COMPLETADA`), impactos monetarios y de inventario ajustados.
 
 ## CUB 1.4: Administrar Cambios de Mercadería
@@ -264,7 +266,7 @@ Espero tu Plan y Tareas para revisarlos. Solo cuando yo te dé el "OK" pasaremos
 | **Ventas** | Modificación Venta | |
 | **Ventas** | Baja Venta | |
 | **Ventas** | Consultar Historial | |
-| **Ventas** | Liquidar Fiado (Cobro) | |
+| **Ventas** | Liquidar Fiado (Cobro) | • Validar fiado PENDIENTE_PAGO.<br>• Aplicar medio de pago actual.<br>• Registrar ingreso en caja.<br>• Pasar a COMPLETADA.<br>• Emitir comprobante.<br>• Evitar doble cobro.<br>• Calcular y registrar vuelto (efectivo). |
 | **Ventas** | Consultar Venta | |
 | **Ventas** | Alta Cambio | |
 | **Ventas** | Modificación Cambio | |
