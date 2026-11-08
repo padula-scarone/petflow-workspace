@@ -42,7 +42,7 @@ Para esta etapa, los módulos satélites se integrarán de forma simulada:
 # 3. Requerimientos Funcionales (RF)
 
 ## Módulo Ventas
-- **RF-VENTAS-01 (Registro y Cálculo):** Soporte dual de cobro. Pago Inmediato (impacta caja, estado `COMPLETADA`) vs. Pago Diferido/Fiado (exige cliente, omite caja, estado `PENDIENTE_PAGO`). Congelamiento de costo unitario vigente por ítem. Al liquidar un fiado en efectivo se registra el monto recibido y el servidor calcula el vuelto; el ingreso a caja es siempre el monto final.
+- **RF-VENTAS-01 (Registro y Cálculo):** Soporte dual de cobro. Pago Inmediato (impacta caja, estado `COMPLETADA`) vs. Pago Diferido/Fiado (exige cliente, omite caja, estado `PENDIENTE_PAGO`). Congelamiento de costo unitario vigente por ítem. Toda bonificación manual registra su motivo: es obligatorio cuando hay descuento manual, admite hasta 200 caracteres, no se admite sin descuento y no aplica al cobro de un fiado. En pagos en efectivo se registra el monto recibido y el servidor calcula el vuelto; el ingreso a caja es siempre el monto final.
 - **RF-VENTAS-02 (Descuento Stock):** Salida de mercadería en tiempo real hacia inventario al confirmar operación (aplica a cobros y fiados).
 - **RF-VENTAS-03 & 04 (Comprobantes y Envío):** Generación de ticket digital y construcción dinámica de enlaces profundos (Deep Linking) con `wa.me` / `mailto:` y texto precargado. **Toda venta (inmediata o fiado) genera un comprobante de forma instantánea.** Al liquidar un fiado se conserva el número de comprobante original: el comprobante pasa a ser un recibo de pago.
 - **RF-VENTAS-05 & 06 (Anulación y Edición Venta):** Ventana innegociable de 15 min. La anulación ejecuta baja lógica y revierte impactos de caja/stock correspondientes. La edición ejecuta una anulación y repuebla la vista para recobro.
@@ -81,8 +81,9 @@ Para esta etapa, los módulos satélites se integrarán de forma simulada:
 1. **Configuración inicial:** Selección de origen (mostrador/digital) y modalidad de entrega (retiro/envío).
 2. **Carga de carrito:** Búsqueda manual de artículos. Validación de disponibilidad de stock (alerta visual si excede).
 3. **Modalidad de Cobro:**
-   - **Pago Inmediato:** Selección de medios de pago, aplicación automática de recargos/descuentos o bonificaciones manuales.
+   - **Pago Inmediato:** Selección de medios de pago, aplicación automática de recargos/descuentos o bonificaciones manuales. En efectivo, el front informa el monto recibido (mayor o igual al monto final) y el servidor calcula y registra el vuelto; sin monto recibido no se registra vuelto.
    - **Pago Diferido (Fiado):** Selección exclusiva de "Fiado", registro obligatorio del cliente deudor.
+   - **Bonificación manual (ambas modalidades):** Toda bonificación manual registra su motivo. Si hay descuento manual, el motivo es obligatorio (de 1 a 200 caracteres, sin contar espacios de los extremos); sin descuento manual no se admite motivo.
 4. **Confirmación Transaccional:**
    - Congela de forma inmutable el costo unitario vigente.
    - Descuenta stock en tiempo real.
@@ -262,12 +263,12 @@ Espero tu Plan y Tareas para revisarlos. Solo cuando yo te dé el "OK" pasaremos
 | Módulo | Acción | Sub-acciones (Checklist Técnico) |
 | :--- | :--- | :--- |
 | **Seguridad** | Iniciar/cerrar sesión | |
-| **Ventas** | Alta Venta | • Seleccionar canal (Digital / Presencial).<br>• Seleccionar Entrega (Retiro / Envío).<br>• Buscar producto.<br>• Añadir producto al carrito.<br>• Modificar cantidad del producto.<br>• Borrar producto del carrito.<br>• Seleccionar medios de pago.<br>• Aplicar descuento manual.<br>• Borrar descuento manual.<br>• Confirmar venta.<br>• Cancelar venta.<br>• Visualizar y enviar comprobante (WhatsApp / Mail).<br>• Registrar fiado.<br>• [BACK] Exponer productos activos para el carrito.<br>• [BACK] Exponer medios de pago activos. |
+| **Ventas** | Alta Venta | • Seleccionar canal (Digital / Presencial).<br>• Seleccionar Entrega (Retiro / Envío).<br>• Buscar producto.<br>• Añadir producto al carrito.<br>• Modificar cantidad del producto.<br>• Borrar producto del carrito.<br>• Seleccionar medios de pago.<br>• Aplicar descuento manual.<br>• Borrar descuento manual.<br>• Confirmar venta.<br>• Cancelar venta.<br>• Visualizar y enviar comprobante (WhatsApp / Mail).<br>• Registrar fiado.<br>• [BACK] Exponer productos activos para el carrito.<br>• [BACK] Exponer medios de pago activos.<br>• [BACK] Registrar motivo del descuento manual.<br>• [BACK] Calcular y registrar vuelto (efectivo).<br>• [BACK] Tomar el vendedor del token. |
 | **Ventas** | Modificación Venta | |
 | **Ventas** | Baja Venta | |
 | **Ventas** | Consultar Historial | |
 | **Ventas** | Liquidar Fiado (Cobro) | • Validar fiado PENDIENTE_PAGO.<br>• Aplicar medio de pago actual.<br>• Registrar ingreso en caja.<br>• Pasar a COMPLETADA.<br>• Emitir comprobante.<br>• Evitar doble cobro.<br>• Calcular y registrar vuelto (efectivo).<br>• [BACK] Exponer medios de pago activos. |
-| **Ventas** | Consultar Venta | |
+| **Ventas** | Consultar Venta | • [BACK] Devolver el detalle del comprobante/transacción. |
 | **Ventas** | Alta Cambio | |
 | **Ventas** | Modificación Cambio | |
 | **Ventas** | Baja Cambio | |
