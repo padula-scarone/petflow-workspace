@@ -262,11 +262,11 @@ Espero tu Plan y Tareas para revisarlos. Solo cuando yo te dé el "OK" pasaremos
 | Módulo | Acción | Sub-acciones (Checklist Técnico) |
 | :--- | :--- | :--- |
 | **Seguridad** | Iniciar/cerrar sesión | |
-| **Ventas** | Alta Venta | • Seleccionar canal (Digital / Presencial).<br>• Seleccionar Entrega (Retiro / Envío).<br>• Buscar producto.<br>• Añadir producto al carrito.<br>• Modificar cantidad del producto.<br>• Borrar producto del carrito.<br>• Seleccionar medios de pago.<br>• Aplicar descuento manual.<br>• Borrar descuento manual.<br>• Confirmar venta.<br>• Cancelar venta.<br>• Visualizar y enviar comprobante (WhatsApp / Mail).<br>• Registrar fiado. |
+| **Ventas** | Alta Venta | • Seleccionar canal (Digital / Presencial).<br>• Seleccionar Entrega (Retiro / Envío).<br>• Buscar producto.<br>• Añadir producto al carrito.<br>• Modificar cantidad del producto.<br>• Borrar producto del carrito.<br>• Seleccionar medios de pago.<br>• Aplicar descuento manual.<br>• Borrar descuento manual.<br>• Confirmar venta.<br>• Cancelar venta.<br>• Visualizar y enviar comprobante (WhatsApp / Mail).<br>• Registrar fiado.<br>• [BACK] Exponer productos activos para el carrito.<br>• [BACK] Exponer medios de pago activos. |
 | **Ventas** | Modificación Venta | |
 | **Ventas** | Baja Venta | |
 | **Ventas** | Consultar Historial | |
-| **Ventas** | Liquidar Fiado (Cobro) | • Validar fiado PENDIENTE_PAGO.<br>• Aplicar medio de pago actual.<br>• Registrar ingreso en caja.<br>• Pasar a COMPLETADA.<br>• Emitir comprobante.<br>• Evitar doble cobro.<br>• Calcular y registrar vuelto (efectivo). |
+| **Ventas** | Liquidar Fiado (Cobro) | • Validar fiado PENDIENTE_PAGO.<br>• Aplicar medio de pago actual.<br>• Registrar ingreso en caja.<br>• Pasar a COMPLETADA.<br>• Emitir comprobante.<br>• Evitar doble cobro.<br>• Calcular y registrar vuelto (efectivo).<br>• [BACK] Exponer medios de pago activos. |
 | **Ventas** | Consultar Venta | |
 | **Ventas** | Alta Cambio | |
 | **Ventas** | Modificación Cambio | |
