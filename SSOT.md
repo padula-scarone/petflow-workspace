@@ -175,7 +175,6 @@ Agrupación física de carpetas por **módulo de negocio**, NO por tecnología.
 ## 8.1. Gestión de Tareas (Issues en GitHub)
 
 **Formato estricto para tableros:** `[ÁMBITO] Tipo: Acción`  
-*(Regla: el valor de `Acción` debe coincidir exactamente con el nombre de la columna "Acción" del Cuadro de Acciones).*
 
 * **`[FRONT] UI: Alta Venta`**  Se crea en el repositorio `petflow-frontend`.
 * **`[BACK] API: Alta Venta`**  Se crea en el repositorio `petflow-backend`.
@@ -253,23 +252,3 @@ De acuerdo con el flujo SDD, tu única tarea en esta etapa es:
 3. Listar las **Tareas Técnicas** paso a paso.
 
 Espero tu Plan y Tareas para revisarlos. Solo cuando yo te dé el "OK" pasaremos a la etapa de Implementación.
-
----
-# 11. Cuadro de Acciones (Hoja de Ruta Maestra)
-
-> **Directiva de Jerarquía y Fuente de Verdad:** 
-> Esta tabla dictamina el 100% del alcance de programación. Ninguna funcionalidad fuera de esta lista debe ser desarrollada. Las IAs (Claude/Gemini) deben utilizar estas sub-acciones exactas como guía de pasos para los planes lógicos (SDD) y el desglose de tareas técnicas.
-
-| Módulo | Acción | Sub-acciones (Checklist Técnico) |
-| :--- | :--- | :--- |
-| **Seguridad** | Iniciar/cerrar sesión | |
-| **Ventas** | Alta Venta | • Seleccionar canal (Digital / Presencial).<br>• Seleccionar Entrega (Retiro / Envío).<br>• Buscar producto.<br>• Añadir producto al carrito.<br>• Modificar cantidad del producto.<br>• Borrar producto del carrito.<br>• Seleccionar medios de pago.<br>• Aplicar descuento manual.<br>• Borrar descuento manual.<br>• Confirmar venta.<br>• Cancelar venta.<br>• Visualizar y enviar comprobante (WhatsApp / Mail).<br>• Registrar fiado.<br>• [BACK] Exponer productos activos para el carrito.<br>• [BACK] Exponer medios de pago activos.<br>• [BACK] Registrar motivo del descuento manual.<br>• [BACK] Calcular y registrar vuelto (efectivo).<br>• [BACK] Tomar el vendedor del token. |
-| **Ventas** | Modificación Venta | • Pedir confirmación avisando que la venta se anula y se reabre Alta Venta con sus datos.<br>• Pedir motivo de la anulación (obligatorio, de 1 a 200 caracteres).<br>• Respetar la ventana de 15 minutos (Error 403 si venció).<br>• Anular la venta original y reabrir Alta Venta con sus datos.<br>• [BACK] Validar el motivo (400 si falta o excede el largo).<br>• [BACK] Registrar el motivo, el usuario (tomado del token) y la fecha y hora de la anulación.<br>• [BACK] Revertir caja y stock. |
-| **Ventas** | Baja Venta | • Pedir confirmación avisando que se repone el stock y, si estaba cobrada, se revierte la caja.<br>• Pedir motivo de la anulación (obligatorio, de 1 a 200 caracteres).<br>• Respetar la ventana de 15 minutos (Error 403 si venció).<br>• [BACK] Validar el motivo (400 si falta o excede el largo).<br>• [BACK] Registrar el motivo, el usuario (tomado del token) y la fecha y hora de la anulación.<br>• [BACK] Baja lógica, sin borrado físico.<br>• [BACK] Revertir caja y stock (en un fiado, solo stock). |
-| **Ventas** | Consultar Historial | |
-| **Ventas** | Liquidar Fiado (Cobro) | • Validar fiado PENDIENTE_PAGO.<br>• Aplicar medio de pago actual.<br>• Registrar ingreso en caja.<br>• Pasar a COMPLETADA.<br>• Emitir comprobante.<br>• Evitar doble cobro.<br>• Calcular y registrar vuelto (efectivo).<br>• [BACK] Exponer medios de pago activos. |
-| **Ventas** | Consultar Venta | • [BACK] Devolver el detalle del comprobante/transacción. |
-| **Ventas** | Alta Cambio | |
-| **Ventas** | Modificación Cambio | |
-| **Ventas** | Baja Cambio | |
-| **Ventas** | Historial Cambios | |
