@@ -175,12 +175,47 @@ Agrupación física de carpetas por **módulo de negocio**, NO por tecnología.
 ## 8.1. Gestión de Tareas (Issues en GitHub)
 
 **Formato estricto para tableros:** `[ÁMBITO] Tipo: Acción`  
+*(En los Tipos `Config`, `Acción` es una descripción libre del trabajo transversal).*
 
-* **`[FRONT] UI: Alta Venta`**  Se crea en el repositorio `petflow-frontend`.
-* **`[BACK] API: Alta Venta`**  Se crea en el repositorio `petflow-backend`.
-* **`[DISEÑO] UX: Alta Venta`**  Draft Issue en el tablero de GitHub Projects o Issue en `petflow-workspace`.
-* **`[DOCS] SDD: Alta Venta`**  Se crea en `petflow-workspace` (redacción de contratos o diagramas).
-* **`[QA] E2E: Alta Venta`**  Se crea en `petflow-workspace` (requiere los PRs aprobados de Front y Back para darse por cerrada).
+El `Tipo` es una lista cerrada por ámbito. Cada Tipo indica qué clase de trabajo es la issue:
+
+| Ámbito | Tipo | Clase de trabajo | Repositorio |
+| :--- | :--- | :--- | :--- |
+| `[FRONT]` | `UI` | Vista con datos de ejemplo (maqueta, sin conexión al back). | `petflow-frontend` |
+| `[FRONT]` | `Integración` | Conectar esa vista al back real (hook real, llamadas HTTP, manejo de errores). | `petflow-frontend` |
+| `[FRONT]` | `Config` | Trabajo transversal (router, cliente HTTP, build). | `petflow-frontend` |
+| `[BACK]` | `API` | Endpoint nuevo o cambio de contrato. | `petflow-backend` |
+| `[BACK]` | `DB` | Esquema, migración o seed. Vive en `petflow-backend` porque la base solo se opera con Prisma. | `petflow-backend` |
+| `[BACK]` | `Config` | Trabajo transversal (deploy, CORS, manejo de errores). | `petflow-backend` |
+| `[DOCS]` | `SDD` | Contratos, planes y diagramas. | `petflow-workspace` |
+| `[DOCS]` | `Config` | Trabajo transversal del workspace. | `petflow-workspace` |
+| `[DISEÑO]` | `UX` | Diseño de experiencia. | Draft Issue en GitHub Projects o Issue en `petflow-workspace` |
+| `[QA]` | `E2E` | Pruebas de punta a punta. Se cierra cuando están aprobados los PRs de Front y Back. | `petflow-workspace` |
+
+`Fix` (corrección de un error) es válido en cualquier ámbito. Ejemplo: `[FRONT] Fix: Alta Venta`.
+
+**Ejemplos (uno por Tipo):**
+
+| Título de la issue | Qué cubre |
+| :--- | :--- |
+| `[FRONT] UI: Consultar Historial` | Maqueta de la vista con datos de ejemplo. |
+| `[FRONT] Integración: Alta Venta` | Conectar la vista de Alta Venta al back real. |
+| `[FRONT] Config: React Router` | Configuración del router (descripción libre). |
+| `[BACK] API: Liquidar Fiado (Cobro)` | Endpoint de cobro de fiado. |
+| `[BACK] DB: Consultar Historial` | Índices o campos nuevos para el historial. |
+| `[BACK] Config: CORS y deploy` | Trabajo transversal del back (descripción libre). |
+| `[DOCS] SDD: Alta Venta` | Contrato y plan de Alta Venta. |
+| `[DOCS] Config: Plantillas de issues` | Trabajo transversal del workspace (descripción libre). |
+| `[DISEÑO] UX: Alta Venta` | Diseño de la pantalla. |
+| `[QA] E2E: Alta Venta` | Prueba punta a punta. |
+| `[FRONT] Fix: Alta Venta` | Corrección de un error. |
+
+**Reglas de issues y ramas:**
+- **Una issue = una rama = un PR.** La maqueta y la conexión de una misma Acción son issues distintas:
+  - `[FRONT] UI: Consultar Historial` se cierra al mergear la maqueta.
+  - `[FRONT] Integración: Consultar Historial` queda en Backlog o en "En espera" hasta que el back esté listo.
+- Cada rama sale de `develop` y vuelve a `develop`. Al mergear se descarta y no se reutiliza.
+- Una issue que espera algo externo (por ejemplo, un endpoint del back) va a la columna "En espera" y no ocupa "En Progreso" (ver sección 9).
 
 ## 8.2. Control de Versiones (Git)
 **Ramas (kebab-case):** `tipo/id-nombre-tarea` (Ej: `feat/1-alta-venta`, `fix/calculo-total`).
@@ -206,7 +241,7 @@ Agrupación física de carpetas por **módulo de negocio**, NO por tecnología.
 El proyecto opera bajo la fusión de 3 metodologías orientadas a la eficiencia y el uso de Inteligencia Artificial:
 
 1. **Shape Up (Alcance Variable):** El tiempo de entrega es innegociable. Ante bloqueos o falta de tiempo, se descartan los detalles técnicos complejos en favor de entregar la versión "esencial" operativa.
-2. **Kanban (Límite WIP = 1):** Prohibido tener más de una (1) tarea en la columna "En Progreso" por desarrollador. Si hay exámenes o bloqueos externos, el tablero se pausa sin romper ciclos de sprint.
+2. **Kanban (Límite WIP = 1):** Prohibido tener más de una (1) tarea en la columna "En Progreso" por desarrollador. Las tareas que esperan algo externo (por ejemplo, un endpoint del back) van a la columna "En espera", que no cuenta para el WIP. Si hay exámenes o bloqueos externos, el tablero se pausa sin romper ciclos de sprint.
 3. **SDD (Spec-Driven Development):** 
    - Prohibido codificar directamente. Se debe diseñar primero un **Contrato de Datos** (tipos/interfaces de entrada y salida en texto plano).
    - Este contrato se inyecta en el **Prompt Maestro SDD** junto con el Caso de Uso Base, delegando a la IA (Claude) la planificación lógica y la posterior generación de código tipado, garantizando que el Frontend y el Backend se ensamblen a la perfección sin tiempos de espera.
