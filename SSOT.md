@@ -12,7 +12,7 @@
 
 ## Estructura Modular
 El sistema se compone de 6 módulos interconectados (operando bajo transacciones atómicas cruzadas):
-1. **Ventas:** Procesamiento ágil en mostrador, descuentos dinámicos, gestión de fiados, cambios de mercadería y envíos de comprobantes vía WhatsApp (Deep Links).
+1. **Ventas:** Procesamiento ágil en mostrador, descuentos dinámicos, gestión de fiados y deudores, cambios de mercadería y envíos de comprobantes vía WhatsApp (Deep Links).
 2. **Inventario:** Directorio de proveedores, catálogo de productos, conversión automática de bolsa cerrada a stock a granel, y alertas de reposición.
 3. **Caja:** Libro mayor del negocio. Controla apertura, cierre, ingresos (ventas), egresos (gastos) y arqueos físicos de efectivo.
 4. **Gastos:** Clasificador transaccional de costos fijos y operativos.
@@ -29,6 +29,7 @@ Despliegue Full-Stack (Front, Back, BD) de los siguientes Casos de Uso Base (CUB
 2. **Registrar Venta (CUB 1.1):** Búsqueda manual de catálogo, aplicación de bonificaciones y selección de modalidad (Inmediato vs. Fiado). Ejecuta descuento de stock, suma en caja (si corresponde), guarda costo histórico inmutable y emite comprobante con Deep Link (WhatsApp/Mail).
 3. **Historial de Ventas (CUB 1.2):** Grilla con filtros. Permite liquidar fiados. Habilita acciones críticas bajo **ventana estricta de 15 minutos**: Anulación definitiva o Edición ágil (anula y repuebla el formulario).
 4. **Cambios de Mercadería (CUB 1.4):** Operaciones vinculadas o aisladas. Si entra una "bolsa abierta", se convierte automáticamente a stock a granel. Toda diferencia a favor suma a la caja diaria. Habilita Anulación y Edición bajo ventana de 15 minutos.
+5. **Fiados y Deudores (CUB 1.5):** Alta, búsqueda y edición de deudores, requisito previo para fiar.
 
 ## Fronteras del Sistema (Mocks)
 Para esta etapa, los módulos satélites se integrarán de forma simulada:
@@ -42,12 +43,13 @@ Para esta etapa, los módulos satélites se integrarán de forma simulada:
 # 3. Requerimientos Funcionales (RF)
 
 ## Módulo Ventas
-- **RF-VENTAS-01 (Registro y Cálculo):** Soporte dual de cobro. Pago Inmediato (impacta caja, estado `COMPLETADA`) vs. Pago Diferido/Fiado (exige cliente, omite caja, estado `PENDIENTE_PAGO`). Congelamiento de costo unitario vigente por ítem. Toda bonificación manual registra su motivo: es obligatorio cuando hay descuento manual, admite hasta 200 caracteres, no se admite sin descuento y no aplica al cobro de un fiado. En pagos en efectivo se registra el monto recibido y el servidor calcula el vuelto; el ingreso a caja es siempre el monto final.
+- **RF-VENTAS-01 (Registro y Cálculo):** Soporte dual de cobro. Pago Inmediato (impacta caja, estado `COMPLETADA`) vs. Pago Diferido/Fiado (exige un deudor registrado, omite caja, estado `PENDIENTE_PAGO`). Congelamiento de costo unitario vigente por ítem. Toda bonificación manual registra su motivo: es obligatorio cuando hay descuento manual, admite hasta 200 caracteres, no se admite sin descuento y no aplica al cobro de un fiado. En pagos en efectivo se registra el monto recibido y el servidor calcula el vuelto; el ingreso a caja es siempre el monto final.
 - **RF-VENTAS-02 (Descuento Stock):** Salida de mercadería en tiempo real hacia inventario al confirmar operación (aplica a cobros y fiados).
 - **RF-VENTAS-03 & 04 (Comprobantes y Envío):** Generación de ticket digital y construcción dinámica de enlaces profundos (Deep Linking) con `wa.me` / `mailto:` y texto precargado. **Toda venta (inmediata o fiado) genera un comprobante de forma instantánea.** Al liquidar un fiado se conserva el número de comprobante original: el comprobante pasa a ser un recibo de pago.
 - **RF-VENTAS-05 & 06 (Anulación y Edición Venta):** Ventana innegociable de 15 min. La anulación ejecuta baja lógica y revierte impactos de caja/stock correspondientes. La edición ejecuta una anulación y repuebla la vista para recobro. Toda anulación y toda edición registra un motivo, el usuario y la fecha y hora. El motivo se ingresa manualmente: es obligatorio y de 1 a 200 caracteres (sin contar espacios de los extremos). El usuario (tomado del token, nunca del body) y la fecha y hora los asigna el servidor automáticamente. Los tres se registran en la venta anulada; en la edición corresponden a la anulación interna que la origina. Sin motivo, o con uno fuera de ese largo, el servidor responde 400.
 - **RF-VENTAS-08 (Cambios - Granel y Saldos):** El ingreso de devoluciones marcadas como "bolsa abierta" se suma estrictamente a la variante "granel" del producto. Diferencias económicas `>= 0` asientan ingresos en caja.
 - **RF-VENTAS-09 & 10 (Anulación y Edición Cambio):** Ventana de 15 min. Reversión atómica de saldos de caja y reposición exacta (unidad o granel) según el formato devuelto originalmente.
+- **RF-VENTAS-11 (Deudores):** Un deudor es la persona que tiene o tuvo un fiado. Se identifica por su DNI, que es único, y registra nombre y apellido, teléfono (con código de país) y DNI, los tres obligatorios. Se puede dar de alta, buscar y editar; no se da de baja. Un fiado solo se registra asociado a un deudor existente: sin deudor, el servidor rechaza la venta con 400.
 
 ## Generales
 - **RF-GENERAL-01 (Inmutabilidad):** Prohibido el borrado físico (`DELETE` SQL). Toda eliminación exige baja lógica (cambio de estado) para mantener integridad referencial.
@@ -71,6 +73,9 @@ Para esta etapa, los módulos satélites se integrarán de forma simulada:
 - **RNF-GENERAL-02 (Payload Liviano):** Arquitectura minimalista sin carga de *assets* pesados ni animaciones complejas (diseñado para local sin Wi-Fi).
 - **RNF-GENERAL-03 (Service Worker):** Implementación de caché de PWA (App Shell) para compilación instantánea de vistas estáticas en aperturas recurrentes.
 
+## Seguridad y Datos Personales
+- **RNF-VENTAS-03 (Datos personales):** El DNI y el teléfono de los deudores solo se entregan a usuarios con sesión validada y no se incluyen en el texto de los mensajes de error.
+
 ---
 
 # 5. Casos de Uso Base (CUB) - Demo
@@ -82,7 +87,7 @@ Para esta etapa, los módulos satélites se integrarán de forma simulada:
 2. **Carga de carrito:** Búsqueda manual de artículos. Validación de disponibilidad de stock (alerta visual si excede).
 3. **Modalidad de Cobro:**
    - **Pago Inmediato:** Selección de medios de pago, aplicación automática de recargos/descuentos o bonificaciones manuales. En efectivo, el front informa el monto recibido (mayor o igual al monto final) y el servidor calcula y registra el vuelto; sin monto recibido no se registra vuelto.
-   - **Pago Diferido (Fiado):** Selección exclusiva de "Fiado", registro obligatorio del cliente deudor.
+   - **Pago Diferido (Fiado):** Selección exclusiva de "Fiado" y selección de un deudor existente o alta de uno nuevo (nombre y apellido, teléfono y DNI, todos obligatorios). Sin deudor no se puede fiar.
    - **Bonificación manual (ambas modalidades):** Toda bonificación manual registra su motivo. Si hay descuento manual, el motivo es obligatorio (de 1 a 200 caracteres, sin contar espacios de los extremos); sin descuento manual no se admite motivo.
 4. **Confirmación Transaccional:**
    - Congela de forma inmutable el costo unitario vigente.
@@ -117,6 +122,14 @@ Para esta etapa, los módulos satélites se integrarán de forma simulada:
 3. **Cálculo de Saldos (Reactivo en UI):** Si la diferencia de precios arroja saldo a favor del establecimiento, se asienta como ingreso en la caja diaria.
 4. **Anulación / Edición (Regla 15 min):** Operaciones atómicas (`prisma.$transaction()`). Revierte con exactitud el stock fraccionado o unitario ingresado y resta la caja.
 **Postcondiciones:** Stocks actualizados (unidad/granel), ingresos extra asentados en caja.
+
+## CUB 1.5: Administrar Deudores
+**Precondiciones:** Sesión validada (Vendedor, Gestor, Gerente). No exige Caja Diaria abierta.
+**Flujo de Ejecución:**
+1. **Alta:** nombre y apellido, teléfono (con código de país) y DNI, los tres obligatorios. El DNI es único: si ya existe, el servidor responde 409 con los datos del deudor existente y el front lo selecciona. El alta también está disponible dentro de CUB 1.1 al elegir "Fiado".
+2. **Búsqueda:** por nombre o DNI, parcial y sin distinguir mayúsculas.
+3. **Edición:** se pueden modificar los tres datos. Si el DNI nuevo pertenece a otro deudor, el servidor responde 409. No hay baja de deudores.
+**Postcondiciones:** Deudor registrado o actualizado, sin efecto en caja ni en stock.
 
 ---
 
