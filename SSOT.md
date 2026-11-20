@@ -174,46 +174,40 @@ Agrupación física de carpetas por **módulo de negocio**, NO por tecnología.
 
 ## 8.1. Gestión de Tareas (Issues en GitHub)
 
-**Formato estricto para tableros:** `[ÁMBITO] Tipo: Acción`  
-*(En los Tipos `Config`, `Acción` es una descripción libre del trabajo transversal).*
+**Formato estricto para tableros:** `[ÁMBITO] Módulo: verbo + resultado concreto`
 
-El `Tipo` es una lista cerrada por ámbito. Cada Tipo indica qué clase de trabajo es la issue:
+- **Ámbito:** `FRONT`, `BACK`, `DOCS`, `DISEÑO` o `QA`. Indica dónde vive el trabajo (ver tabla).
+- **Módulo:** el área del producto que cambia (Ventas, Inventario, Caja, Gastos, Sesión, etc.). Aparece siempre.
+- **Verbo + resultado concreto:** verbo en infinitivo (Agregar, Corregir, Conectar, Reemplazar, Mostrar, Alinear, Eliminar; no es una lista cerrada) que dice qué queda distinto al terminar. No existe un campo `Tipo`.
+- **Regla de oro:** el título debe poder leerse como *"al terminar, ___"*. Nada genérico como `Alta Venta`.
+- **Bug o trabajo nuevo:** se distingue con los labels de GitHub (`bug`, `feature`), no en el título.
 
-| Ámbito | Tipo | Clase de trabajo | Repositorio |
-| :--- | :--- | :--- | :--- |
-| `[FRONT]` | `UI` | Vista con datos de ejemplo (maqueta, sin conexión al back). | `petflow-frontend` |
-| `[FRONT]` | `Integración` | Conectar esa vista al back real (hook real, llamadas HTTP, manejo de errores). | `petflow-frontend` |
-| `[FRONT]` | `Config` | Trabajo transversal (router, cliente HTTP, build). | `petflow-frontend` |
-| `[BACK]` | `API` | Endpoint nuevo o cambio de contrato. | `petflow-backend` |
-| `[BACK]` | `DB` | Esquema, migración o seed. Vive en `petflow-backend` porque la base solo se opera con Prisma. | `petflow-backend` |
-| `[BACK]` | `Config` | Trabajo transversal (deploy, CORS, manejo de errores). | `petflow-backend` |
-| `[DOCS]` | `SDD` | Contratos, planes y diagramas. | `petflow-workspace` |
-| `[DOCS]` | `Config` | Trabajo transversal del workspace. | `petflow-workspace` |
-| `[DISEÑO]` | `UX` | Diseño de experiencia. | Draft Issue en GitHub Projects o Issue en `petflow-workspace` |
-| `[QA]` | `E2E` | Pruebas de punta a punta. Se cierra cuando están aprobados los PRs de Front y Back. | `petflow-workspace` |
+| Ámbito | Clase de trabajo | Repositorio |
+| :--- | :--- | :--- |
+| `[FRONT]` | Interfaz, hooks, llamadas HTTP y configuración del cliente. | `petflow-frontend` |
+| `[BACK]` | Endpoints, esquema, migraciones, seed y configuración del servidor. La base solo se opera con Prisma, por eso el trabajo de DB vive en `petflow-backend`. | `petflow-backend` |
+| `[DOCS]` | Contratos, planes, diagramas y documentación del workspace. | `petflow-workspace` |
+| `[DISEÑO]` | Diseño de experiencia. | Draft Issue en GitHub Projects o Issue en `petflow-workspace` |
+| `[QA]` | Pruebas de punta a punta. Se cierra cuando están aprobados los PRs de Front y Back. | `petflow-workspace` |
 
-`Fix` (corrección de un error) es válido en cualquier ámbito. Ejemplo: `[FRONT] Fix: Alta Venta`.
+**Ejemplos:**
 
-**Ejemplos (uno por Tipo):**
-
-| Título de la issue | Qué cubre |
+| Título de la issue | Al terminar... |
 | :--- | :--- |
-| `[FRONT] UI: Consultar Historial` | Maqueta de la vista con datos de ejemplo. |
-| `[FRONT] Integración: Alta Venta` | Conectar la vista de Alta Venta al back real. |
-| `[FRONT] Config: React Router` | Configuración del router (descripción libre). |
-| `[BACK] API: Liquidar Fiado (Cobro)` | Endpoint de cobro de fiado. |
-| `[BACK] DB: Consultar Historial` | Índices o campos nuevos para el historial. |
-| `[BACK] Config: CORS y deploy` | Trabajo transversal del back (descripción libre). |
-| `[DOCS] SDD: Alta Venta` | Contrato y plan de Alta Venta. |
-| `[DOCS] Config: Plantillas de issues` | Trabajo transversal del workspace (descripción libre). |
-| `[DISEÑO] UX: Alta Venta` | Diseño de la pantalla. |
-| `[QA] E2E: Alta Venta` | Prueba punta a punta. |
-| `[FRONT] Fix: Alta Venta` | Corrección de un error. |
+| `[FRONT] Ventas: Mostrar importes con 2 decimales (ej. $1.500,00)` | los importes se ven con 2 decimales. |
+| `[FRONT] Ventas: Reemplazar motivo de descuento por un select` | el motivo de descuento se elige de un select. |
+| `[FRONT] Ventas: Alinear a la derecha totales y columnas numéricas` | los totales y las columnas numéricas quedan alineados a la derecha. |
+| `[FRONT] Ventas: Corregir formato de importes, motivo de descuento y alineación numérica` | las tres correcciones quedan hechas (issue agrupada, con checklist en el cuerpo). |
+| `[FRONT] Ventas: Conectar historial al back real` | el historial muestra datos reales del back. |
+| `[BACK] Inventario: Agregar endpoint para descontar stock al vender` | existe un endpoint que descuenta el stock de una venta. |
+
+**Issues que corrigen varias cosas:**
+- El título usa una frase que agrupe (ver el cuarto ejemplo) y el cuerpo lleva una checklist con un ítem por cosa.
+- Se mantiene **una issue = una rama = un PR**: la checklist se resuelve toda en esa misma rama.
+- Si las cosas son independientes entre sí, conviene separarlas en issues distintas.
 
 **Reglas de issues y ramas:**
-- **Una issue = una rama = un PR.** La maqueta y la conexión de una misma Acción son issues distintas:
-  - `[FRONT] UI: Consultar Historial` se cierra al mergear la maqueta.
-  - `[FRONT] Integración: Consultar Historial` queda en Backlog o en "En espera" hasta que el back esté listo.
+- **Una issue = una rama = un PR.** La maqueta y la conexión de una misma funcionalidad son issues distintas. Por ejemplo, la maqueta del historial se cierra al mergear la maqueta, y `[FRONT] Ventas: Conectar historial al back real` queda en Backlog o en "En espera" hasta que el back esté listo.
 - Cada rama sale de `develop` y vuelve a `develop`. Al mergear se descarta y no se reutiliza.
 - Una issue que espera algo externo (por ejemplo, un endpoint del back) va a la columna "En espera" y no ocupa "En Progreso" (ver sección 9).
 
