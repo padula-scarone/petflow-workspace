@@ -49,7 +49,7 @@ Para esta etapa, los módulos satélites se integrarán de forma simulada:
 - **RF-VENTAS-05 & 06 (Anulación y Edición Venta):** Ventana innegociable de 15 min. La anulación ejecuta baja lógica y revierte impactos de caja/stock correspondientes. La edición ejecuta una anulación y repuebla la vista para recobro. Toda anulación y toda edición registra un motivo, el usuario y la fecha y hora. El motivo se ingresa manualmente: es obligatorio y de 1 a 200 caracteres (sin contar espacios de los extremos). El usuario (tomado del token, nunca del body) y la fecha y hora los asigna el servidor automáticamente. Los tres se registran en la venta anulada; en la edición corresponden a la anulación interna que la origina. Sin motivo, o con uno fuera de ese largo, el servidor responde 400.
 - **RF-VENTAS-08 (Cambios - Granel y Saldos):** El ingreso de devoluciones marcadas como "bolsa abierta" se suma estrictamente a la variante "granel" del producto. Diferencias económicas `>= 0` asientan ingresos en caja.
 - **RF-VENTAS-09 & 10 (Anulación y Edición Cambio):** Ventana de 15 min. Reversión atómica de saldos de caja y reposición exacta (unidad o granel) según el formato devuelto originalmente.
-- **RF-VENTAS-11 (Deudores):** Un deudor es la persona que tiene o tuvo un fiado. Se identifica por su DNI, que es único, y registra nombre y apellido, teléfono (con código de país) y DNI, los tres obligatorios. Se puede dar de alta, buscar y editar; no se da de baja. Un fiado solo se registra asociado a un deudor existente: sin deudor, el servidor rechaza la venta con 400.
+- **RF-VENTAS-11 (Deudores):** Un deudor es la persona que tiene o tuvo un fiado. Se identifica por su DNI, que es único, y registra nombre y apellido, teléfono (con código de país) y DNI, los tres obligatorios. Se puede dar de alta, buscar y editar; no se da de baja. Un fiado solo se registra asociado a un deudor existente: sin deudor, el servidor rechaza la venta con 400; con un deudor inexistente, responde 404 sin descontar stock ni crear nada. Una venta de contado no admite deudor: si lo trae, el servidor responde 400. En esta versión no se ingresa texto libre de cliente; el campo `clienteReferencia` de las ventas anteriores queda solo de lectura, y esas ventas no tienen deudor.
 
 ## Generales
 - **RF-GENERAL-01 (Inmutabilidad):** Prohibido el borrado físico (`DELETE` SQL). Toda eliminación exige baja lógica (cambio de estado) para mantener integridad referencial.
@@ -74,7 +74,8 @@ Para esta etapa, los módulos satélites se integrarán de forma simulada:
 - **RNF-GENERAL-03 (Service Worker):** Implementación de caché de PWA (App Shell) para compilación instantánea de vistas estáticas en aperturas recurrentes.
 
 ## Seguridad y Datos Personales
-- **RNF-VENTAS-03 (Datos personales):** El DNI y el teléfono de los deudores solo se entregan a usuarios con sesión validada y no se incluyen en el texto de los mensajes de error.
+- **RNF-VENTAS-03 (Datos personales):** El DNI y el teléfono de los deudores solo se entregan a usuarios con sesión validada y no se incluyen en el texto de los mensajes de error. El historial entrega del deudor solo su id y nombre. El DNI y el teléfono salen en el detalle de una venta, en la respuesta del alta de la venta y en el módulo de deudores.
+- **RNF-GENERAL-07 (Seguridad por filas):** La base de datos mantiene activada la seguridad por filas (RLS) en todas las tablas del esquema `public`. El backend se conecta con un rol que la omite, de modo que los datos solo se acceden a través de la API. Toda tabla nueva se crea con RLS activado.
 
 ---
 
@@ -87,20 +88,20 @@ Para esta etapa, los módulos satélites se integrarán de forma simulada:
 2. **Carga de carrito:** Búsqueda manual de artículos. Validación de disponibilidad de stock (alerta visual si excede).
 3. **Modalidad de Cobro:**
    - **Pago Inmediato:** Selección de medios de pago, aplicación automática de recargos/descuentos o bonificaciones manuales. En efectivo, el front informa el monto recibido (mayor o igual al monto final) y el servidor calcula y registra el vuelto; sin monto recibido no se registra vuelto.
-   - **Pago Diferido (Fiado):** Selección exclusiva de "Fiado" y selección de un deudor existente o alta de uno nuevo (nombre y apellido, teléfono y DNI, todos obligatorios). Sin deudor no se puede fiar.
+   - **Pago Diferido (Fiado):** Selección exclusiva de "Fiado" y selección de un deudor existente o alta de uno nuevo (nombre y apellido, teléfono y DNI, todos obligatorios). Sin deudor no se puede fiar. El front envía el deudor elegido y la venta queda asociada a él. En un pago inmediato no se envía deudor.
    - **Bonificación manual (ambas modalidades):** Toda bonificación manual registra su motivo. Si hay descuento manual, el motivo es obligatorio (de 1 a 200 caracteres, sin contar espacios de los extremos); sin descuento manual no se admite motivo.
 4. **Confirmación Transaccional:**
    - Congela de forma inmutable el costo unitario vigente.
    - Descuenta stock en tiempo real.
    - Si es **Inmediato**: Impacta ingreso en caja, estado `COMPLETADA`, emite ticket digital de pago.
-   - Si es **Fiado**: Omite impacto en caja, estado `PENDIENTE_PAGO` y emite ticket de deuda. *(Nota BD: `numero_comprobante` SIEMPRE se genera al instante).*
+   - Si es **Fiado**: Omite impacto en caja, estado `PENDIENTE_PAGO`, asociado al deudor, y emite ticket de deuda. *(Nota BD: `numero_comprobante` SIEMPRE se genera al instante).*
 5. **Acciones Post-Confirmación:** Envío de comprobante vía Deep Link (WhatsApp/Mail) o ejecución de Edición Ágil (anulación interna y repoblado del formulario).
 **Postcondiciones:** Venta registrada, comprobante emitido, stock descontado, caja actualizada (solo si es pago inmediato).
 
 ## CUB 1.2: Consultar Historial de Ventas
 **Precondiciones:** Sesión validada, Caja Diaria "Abierta" (obligatorio para liquidar o anular ventas con cobro).
 **Flujo de Ejecución:**
-1. **Visualización:** Grilla interactiva con paginación (Server-Side, latencia <2s) y filtrado (fecha, producto, estado).
+1. **Visualización:** Grilla interactiva con paginación (Server-Side, latencia <2s) y filtros (fecha, producto, estado, origen, medio de pago, nombre del deudor y comprobante). La grilla muestra el deudor solo con su id y nombre; el detalle de la venta muestra el deudor completo (nombre, teléfono y DNI). Las ventas de contado y las anteriores al vínculo con deudores no tienen deudor.
 2. **Edición Ágil (Regla 15 min):** Antes de ejecutarse, el front pide confirmación y un motivo obligatorio (de 1 a 200 caracteres, sin contar espacios de los extremos). El servidor valida el motivo (sin motivo o fuera de largo responde 400) y la ventana temporal. Si aprueba, ejecuta anulación lógica registrando en la venta anulada el motivo, el usuario del token y la fecha y hora (estos dos últimos asignados automáticamente), revierte caja/stock y redirige a CUB 1.1 repoblando el formulario. Si expiran los 15 minutos, el servidor debe devolver Error 403 Forbidden.
  3. **Anulación Definitiva (Regla 15 min):** Antes de ejecutarse, el front pide confirmación y un motivo obligatorio (de 1 a 200 caracteres, sin contar espacios de los extremos). El servidor valida el motivo (sin motivo o fuera de largo responde 400) y ejecuta baja lógica de la venta registrando el motivo, el usuario del token y la fecha y hora (estos dos últimos asignados automáticamente), y revierte impactos atómicamente. Si el ticket era un fiado, solo repone stock. Si expiran los 15 minutos, el servidor debe devolver Error 403 Forbidden.
 4. **Liquidar Fiado (Sin límite de tiempo):** 
@@ -129,6 +130,7 @@ Para esta etapa, los módulos satélites se integrarán de forma simulada:
 1. **Alta:** nombre y apellido, teléfono (con código de país) y DNI, los tres obligatorios. El DNI es único: si ya existe, el servidor responde 409 con los datos del deudor existente y el front lo selecciona. El alta también está disponible dentro de CUB 1.1 al elegir "Fiado".
 2. **Búsqueda:** por nombre o DNI, parcial y sin distinguir mayúsculas.
 3. **Edición:** se pueden modificar los tres datos. Si el DNI nuevo pertenece a otro deudor, el servidor responde 409. No hay baja de deudores.
+4. **Formatos (Alta y Edición):** Nombre y apellido: se recorta en los extremos y tiene de 1 a 100 caracteres. DNI: se recorta, solo dígitos, 7 u 8, sin puntos. Teléfono: admite espacios, guiones y un `+` solo al inicio; se guarda solo con dígitos, de 11 a 15, con código de país (no se exige el prefijo 54). Los mensajes de error nunca incluyen DNI, teléfono ni nombre (RNF-VENTAS-03).
 **Postcondiciones:** Deudor registrado o actualizado, sin efecto en caja ni en stock.
 
 ---
